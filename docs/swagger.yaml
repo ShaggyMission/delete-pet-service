@@ -1,22 +1,55 @@
 openapi: 3.0.0
 info:
-  title: delete-pet-service API
-  description: API to delete a pet by ID
+  title: Pet Delete Service API
   version: 1.0.0
+  description: >
+    This API provides pet deletion functionality for the Shaggy Mission pet adoption system.
+    The service allows permanent removal of pet records from the MongoDB database when pets
+    have been successfully adopted, relocated, or need to be removed for administrative purposes.
+    **This operation is irreversible** - deleted pet records cannot be recovered.
+    The service validates pet existence before deletion and provides clear confirmation
+    or error messages for all operations.
 
 servers:
-  - url: http://localhost:3007
+  - url: http://localhost:3008
+    description: Development server
 
 paths:
   /pets/{id}:
     delete:
-      summary: Delete a pet by its ID
+      summary: Delete pet record permanently
+      description: >
+        Permanently removes a pet record from the database identified by their MongoDB ObjectId.
+        This operation is **irreversible** and will completely remove all pet data including
+        name, breed, age, health status, description, location, and images.
+        
+        **Deletion Process:**
+        1. Pet is located by the provided ObjectId
+        2. Pet existence is validated before deletion
+        3. Pet record is permanently removed using MongoDB's findByIdAndDelete
+        4. Confirmation message is returned on successful deletion
+        5. If pet is not found, a 404 error is returned
+        
+        **Important Warning:**
+        This operation cannot be undone. Once a pet is deleted, all associated data
+        is permanently lost and cannot be recovered.
+        
+        **Common Use Cases:**
+        - Remove pets that have been successfully adopted
+        - Clean up duplicate or test records
+        - Administrative maintenance and data cleanup
+        - Remove pets transferred to other organizations
+      tags:
+        - Pet Management
       parameters:
         - name: id
           in: path
           required: true
+          description: The MongoDB ObjectId of the pet to delete
           schema:
             type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: "507f1f77bcf86cd799439011"
       responses:
         '200':
           description: Pet deleted successfully
@@ -27,7 +60,128 @@ paths:
                 properties:
                   message:
                     type: string
+                    example: "Pet deleted successfully"
+                    description: Confirmation message indicating successful deletion
+              examples:
+                successful_deletion:
+                  summary: Pet successfully deleted
+                  value:
+                    message: "Pet deleted successfully"
         '404':
-          description: Pet not found
+          description: Not Found – Pet with specified ID does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Pet not found"
+                    description: Error message when pet ID is not found in database
+              examples:
+                pet_not_found:
+                  summary: Pet ID not found in database
+                  value:
+                    message: "Pet not found"
+        '400':
+          description: Bad Request – Invalid ObjectId format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid ObjectId format"
+                    description: Error message for malformed ObjectId
+              examples:
+                invalid_objectid:
+                  summary: Invalid MongoDB ObjectId format
+                  value:
+                    message: "Invalid ObjectId format"
         '500':
-          description: Internal server error
+          description: Internal Server Error – Database or server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"
+                    description: Error message for server-side issues
+              examples:
+                server_error:
+                  summary: Database connection or processing error
+                  value:
+                    message: "Internal server error"
+
+components:
+  schemas:
+    DeleteResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Confirmation message for successful deletion
+          example: "Pet deleted successfully"
+      description: Response returned when pet is successfully deleted
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message describing what went wrong
+          example: "Pet not found"
+      description: Standard error response format
+
+    PetReference:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Pet's unique MongoDB ObjectId
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          description: Pet's name
+          example: "Buddy"
+        breed:
+          type: string
+          description: Pet's breed
+          example: "Golden Retriever"
+        age:
+          type: number
+          description: Pet's age in years
+          example: 3
+        healthStatus:
+          type: string
+          enum: ["Good", "Fair", "Delicate"]
+          description: Pet's health status
+          example: "Good"
+        description:
+          type: string
+          description: Pet's description
+          example: "A friendly and energetic dog"
+        location:
+          type: string
+          description: Pet's location
+          example: "New York, NY"
+        images:
+          type: array
+          items:
+            type: string
+          description: Array of pet image URLs
+          example: ["https://example.com/pet1.jpg"]
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-15T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-20T14:45:00.000Z"
+      description: Reference schema showing the structure of pet data that gets deleted (for documentation purposes only)
