@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: delete-pet-service API
+  description: API to delete a pet by ID
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3007
+
+paths:
+  /pets/{id}:
+    delete:
+      summary: Delete a pet by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pet deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Pet not found
+        '500':
+          description: Internal server error
