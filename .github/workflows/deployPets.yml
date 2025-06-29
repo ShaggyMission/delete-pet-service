@@ -73,4 +73,4 @@ jobs:
 
           sudo docker rm -f delete-pet-service 2>/dev/null || true
 
-          sudo docker run -d --name delete-pet-service -p 3007:3007 lissethpacheco/delete-pet-service:latest
+          sudo docker run -d --name delete-pet-service -p 3008:3008 lissethpacheco/delete-pet-service:latest
