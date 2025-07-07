@@ -1,16 +1,22 @@
 const express = require('express');
-const app = express();
+const cors = require('cors');
 const YAML = require('yamljs');
 const swaggerUi = require('swagger-ui-express');
-const cors = require('cors'); 
+const petRoutes = require('./routes/pet.routes');
 
-const swaggerDocument = YAML.load('./docs/swagger.yaml');
+const app = express();
 
-app.use(cors()); 
-app.use('/deletePets-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
 
-const petRoutes = require('./routes/pet.routes');
+const swaggerDocument = YAML.load('./docs/swagger.yaml');
+app.use('/deletePets-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 app.use('/pets', petRoutes);
 
 module.exports = app;
